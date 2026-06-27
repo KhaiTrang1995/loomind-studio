@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "loomind-engine"
-version = "0.1.0"
+version = "0.3.0"
 description = "AI Experience Engine — Semantic search & feedback for AI coding agents"
 authors = ["Loomind"]
 license = "MIT"

@@ -51,7 +51,7 @@ class TestE2EHealthFlow:
         assert "uptime_seconds" in data
         assert "version" in data
         assert data["status"] == "ok"
-        assert data["version"] == "0.2.0"
+        assert data["version"] == "0.3.0"
 
     def test_ready_endpoint(self, e2e_client: TestClient) -> None:
         resp = e2e_client.get("/ready")
@@ -215,7 +215,7 @@ class TestE2EOpenAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["info"]["title"] == "Loomind Experience Engine"
-        assert data["info"]["version"] == "0.2.0"
+        assert data["info"]["version"] == "0.3.0"
 
         # Check all expected paths exist
         paths = data["paths"]

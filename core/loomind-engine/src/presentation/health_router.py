@@ -24,7 +24,7 @@ async def health(req: Request) -> HealthStatus:
         embedder_loaded=service.embedder.is_loaded,
         llm_available=False,  # Checked lazily
         uptime_seconds=time.monotonic() - _start_time,
-        version="0.2.0",
+        version="0.3.0",
     )
 
 
