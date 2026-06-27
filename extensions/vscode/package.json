@@ -1,0 +1,60 @@
+{
+  "name": "loomind-vscode",
+  "displayName": "Loomind Experience Engine",
+  "description": "AI Experience Engine — Intercept AI agent actions and inject learned suggestions",
+  "version": "0.1.0",
+  "publisher": "loomind",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "tsup src/extension.ts --format cjs --external vscode",
+    "dev": "tsup src/extension.ts --format cjs --external vscode --watch",
+    "lint": "tsc --noEmit",
+    "test": "echo \"no tests yet\""
+  },
+  "contributes": {
+    "configuration": {
+      "title": "Loomind",
+      "properties": {
+        "loomind.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable the Experience Engine"
+        },
+        "loomind.engineUrl": {
+          "type": "string",
+          "default": "http://localhost:8082",
+          "description": "URL of the Experience Engine"
+        },
+        "loomind.maxSuggestions": {
+          "type": "number",
+          "default": 3,
+          "description": "Maximum number of suggestions to show"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "loomind.toggleEnabled",
+        "title": "Loomind: Toggle Enabled"
+      },
+      {
+        "command": "loomind.showStatus",
+        "title": "Loomind: Show Engine Status"
+      }
+    ]
+  },
+  "dependencies": {
+    "@loomind/client": "*",
+    "@loomind/types": "*"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.95.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,12 @@
+# Loomind Studio — Codex project configuration
+
+model = "o4-mini"
+model_reasoning_effort = "medium"
+
+[project]
+sandbox_mode = "workspace-write"
+
+[agents]
+max_threads = 6
+max_depth = 1
+job_max_runtime_seconds = 1800

@@ -1,0 +1,181 @@
+# ============================================================
+# Loomind Experience Engine — Docker Compose
+# Engine (v0.3.0 Phase 11 Agentic Brain) + Qdrant Server
+# ============================================================
+
+services:
+  # ── Python Experience Engine ─────────────────────────────
+  engine:
+    build:
+      context: ../../core/loomind-engine
+      dockerfile: ../../apps/docker-deployment/Dockerfile
+    container_name: loomind-engine
+    # Load overrides from .env in this directory (copy .env.example → .env and edit)
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${ENGINE_PORT:-8082}:8082"
+    environment:
+      # ── Core ──
+      ENGINE_HOST: "0.0.0.0"
+      ENGINE_PORT: "8082"
+      ENGINE_LOG_LEVEL: "info"
+      LOG_FORMAT: "json"
+
+      # ── Qdrant ──
+      QDRANT_MODE: "server"
+      QDRANT_URL: "http://qdrant:6333"
+      QDRANT_COLLECTION: "experiences"
+
+      # ── Embeddings ──
+      EMBEDDING_MODEL: "all-MiniLM-L6-v2"
+      EMBEDDING_DEVICE: "cpu"
+
+      # ── LLM (Ollama running on host) ──
+      # host.docker.internal resolves automatically on Docker Desktop (macOS/Windows).
+      # On Linux: uncomment extra_hosts below, or replace with the host's LAN IP.
+      LLM_PROVIDER: "ollama"
+      OLLAMA_URL: "http://host.docker.internal:11434"
+      OLLAMA_MODEL: "llama3.2:3b"
+
+      # ── Rate limits ──
+      INTERCEPT_RATE_LIMIT: "120"
+      EXTRACT_RATE_LIMIT: "60"
+
+      # ── Background worker ──
+      ENABLE_JUDGE_WORKER: "true"
+      JUDGE_BATCH_INTERVAL: "5"
+      EVOLVE_INTERVAL_MINUTES: "30"
+
+      # ── Phase 11 — Agentic Brain ──────────────────────────
+      # HITL: SECURITY tasks always require explicit approval regardless of timeout.
+      HITL_TIMEOUT_SECONDS: "180"
+      MAX_TASK_RETRIES: "3"
+      # Absolute path inside container — persisted via engine-data volume.
+      GOAL_DB_PATH: "/app/data/goals.db"
+      # Notifications: OFF by default — enable only after configuring webhooks.
+      NOTIFICATION_ENABLED: "false"
+      TELEGRAM_BOT_TOKEN: ""
+      TELEGRAM_CHAT_ID: ""
+
+      # ── CLI Bridge (host-side subprocess proxy) ──────────
+      # Engine calls this to run claude/grok/codex/agy on the host.
+      # host.docker.internal resolves automatically on Docker Desktop (Win/Mac).
+      CLI_BRIDGE_URL: "http://host.docker.internal:8083"
+      CLI_TIMEOUT: "120"
+
+      # ── Concurrency ──────────────────────────────────────
+      # MUST stay at 1: BackgroundWorker and EventBus are in-process singletons.
+      # Increase only after replacing them with Redis-backed equivalents.
+      UVICORN_WORKERS: "1"
+
+    # Uncomment on Linux to resolve host.docker.internal → host machine
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+    volumes:
+      # Persist SQLite goals DB + ui-settings.json across container restarts
+      - engine-data:/app/data
+      - engine-logs:/app/logs
+
+    depends_on:
+      qdrant:
+        condition: service_started
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8082/health').raise_for_status()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+
+  # ── Frontend Dashboard ───────────────────────────────────
+  frontend:
+    build:
+      context: ../../
+      dockerfile: apps/docker-deployment/Dockerfile.frontend
+    container_name: loomind-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - engine
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # ── Agent Loop (autonomous task runner) ─────────────────
+  agent-loop:
+    build:
+      context: ../../apps/cli-bridge
+      dockerfile: Dockerfile.agent-loop
+    container_name: loomind-agent-loop
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Engine is on the internal Docker network
+      ENGINE_URL: "http://engine:8082"
+      # CLI Bridge runs on HOST (spawns claude.exe / grok.exe — can't Dockerize)
+      # host.docker.internal resolves automatically on Docker Desktop (Win/Mac).
+      # On Linux: uncomment extra_hosts in engine service above, same applies here.
+      BRIDGE_URL: "http://host.docker.internal:8083"
+      POLL_INTERVAL: "15"
+      HEARTBEAT_INTERVAL: "60"
+      CLI_TIMEOUT: "120"
+      MAX_ITERATIONS: "3"
+    # Uncomment on Linux to resolve host.docker.internal → host machine
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    volumes:
+      # Persist cli_affinity.json (dynamic CLI success-rate data) across restarts
+      - agent-loop-data:/app/data
+    depends_on:
+      engine:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # ── Qdrant Vector Database ───────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: loomind-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-storage:/qdrant/storage
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -sf http://localhost:6333/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+volumes:
+  # Engine: SQLite goals DB + saved config overrides
+  engine-data:
+    driver: local
+  # Engine: structured JSON logs
+  engine-logs:
+    driver: local
+  # Qdrant: vector storage (was host bind-mount, now named for portability)
+  qdrant-storage:
+    driver: local
+  # Agent Loop: persists cli_affinity.json (dynamic CLI success-rate tracker)
+  agent-loop-data:
+    driver: local

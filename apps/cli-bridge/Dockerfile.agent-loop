@@ -1,0 +1,11 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# agent_loop.py uses stdlib only — no pip install needed
+COPY agent_loop.py .
+
+# /app/data persists cli_affinity.json across restarts (mounted as a named volume)
+RUN mkdir -p /app/data
+
+CMD ["python", "agent_loop.py"]

@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loomind Studio — AI Experience Engine</title>
+  <meta name="description" content="Loomind Studio: open-source AI Experience Engine for coding agents. 3-layer intercept pipeline, Agentic Brain with BA decomposition, HITL, priority queue, and real-time SSE event bus.">
+  <meta name="keywords" content="AI, experience engine, coding agent, Qdrant, FastAPI, MCP, RAG, vector search, agent orchestration, BA agent, HITL, autonomous agent">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta property="og:title" content="Loomind Studio — AI Experience Engine">
+  <meta property="og:description" content="Institutional memory for coding agents. 3-layer intercept pipeline, goal orchestration, and real-time event bus.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://github.com/KhaiTrang1995/loomind-studio">
+  <meta property="og:image" content="https://raw.githubusercontent.com/KhaiTrang1995/loomind-studio/main/screenshots/Dashboard.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Loomind Studio — AI Experience Engine">
+  <meta name="twitter:description" content="Institutional memory for coding agents. 3-layer intercept pipeline, goal orchestration, and real-time event bus.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/KhaiTrang1995/loomind-studio/main/screenshots/Dashboard.svg">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233b82f6'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Inter%2C-apple-system%2Csans-serif' font-size='13' font-weight='700' fill='white'%3ELM%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #0a0e1a;
+      --bg-card:   rgba(17, 24, 39, 0.75);
+      --bg-panel:  #111827;
+      --border:    rgba(255, 255, 255, 0.08);
+      --border-hv: rgba(255, 255, 255, 0.16);
+      --blue:      #3b82f6;
+      --blue-glow: rgba(59, 130, 246, 0.18);
+      --green:     #10b981;
+      --amber:     #f59e0b;
+      --purple:    #8b5cf6;
+      --cyan:      #06b6d4;
+      --text:      #f1f5f9;
+      --text-sm:   #94a3b8;
+      --text-dim:  #64748b;
+      --radius:    12px;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── Ambient background ─── */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.10) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(139, 92, 246, 0.07) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.03) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59, 130, 246, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    main, header, footer, section, div.section-alt { position: relative; z-index: 1; }
+
+    /* ─── Navigation ─── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(10, 14, 26, 0.85);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 0 16px var(--blue-glow);
+      flex-shrink: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: var(--text-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
+
+    .nav-cta {
+      text-decoration: none;
+      background: var(--blue);
+      color: #fff;
+      padding: 7px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    .nav-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* ─── Hero ─── */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 96px 24px 64px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      padding: 5px 14px;
+      border-radius: 100px;
+      color: #93c5fd;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5.5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #60a5fa 20%, #818cf8 60%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-desc {
+      max-width: 680px;
+      margin: 0 auto 40px;
+      font-size: clamp(1rem, 2vw, 1.125rem);
+      color: var(--text-sm);
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 64px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 10px 24px rgba(59, 130, 246, 0.4); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--border-hv); background: rgba(255,255,255,0.03); transform: translateY(-2px); }
+
+    /* ─── Stats row ─── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-bottom: 64px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    .stat-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .stat-label { font-size: 0.8rem; color: var(--text-dim); font-weight: 500; }
+
+    /* ─── Terminal ─── */
+    .terminal-wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--bg-panel);
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.06);
+      text-align: left;
+    }
+
+    .terminal-header {
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .terminal-dots { display: flex; gap: 7px; }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ef4444; }
+    .dot-y { background: #f59e0b; }
+    .dot-g { background: #10b981; }
+
+    .terminal-tabs { display: flex; gap: 4px; }
+    .ttab {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ttab.active { color: var(--cyan); background: rgba(6, 182, 212, 0.08); }
+    .ttab:hover:not(.active) { color: var(--text-sm); }
+
+    .terminal-body {
+      padding: 24px 28px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      height: 280px;
+      overflow-y: auto;
+      line-height: 1.7;
+    }
+
+    .t-line { margin-bottom: 2px; }
+    .t-prompt { color: var(--cyan); margin-right: 8px; }
+    .t-green  { color: #34d399; }
+    .t-blue   { color: #60a5fa; }
+    .t-purple { color: #a78bfa; }
+    .t-amber  { color: #fbbf24; }
+    .t-dim    { color: var(--text-dim); }
+
+    /* ─── Section commons ─── */
+    .section { max-width: 1200px; margin: 0 auto; padding: 80px 24px; }
+    .section-alt { background: rgba(17, 24, 39, 0.4); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+    .section-head { text-align: center; margin-bottom: 56px; }
+    .section-head h2 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 14px; }
+    .section-head p  { color: var(--text-sm); max-width: 560px; margin: 0 auto; font-size: 0.95rem; }
+
+    /* ─── Feature grid ─── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--card-accent, var(--blue)), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .feature-card:hover { border-color: var(--border-hv); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.25); }
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-card[data-accent="blue"]   { --card-accent: var(--blue); }
+    .feature-card[data-accent="green"]  { --card-accent: var(--green); }
+    .feature-card[data-accent="purple"] { --card-accent: var(--purple); }
+    .feature-card[data-accent="cyan"]   { --card-accent: var(--cyan); }
+    .feature-card[data-accent="amber"]  { --card-accent: var(--amber); }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+    }
+
+    .icon-blue   { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+    .icon-green  { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+    .icon-purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); }
+    .icon-cyan   { background: rgba(6, 182, 212, 0.15);  color: var(--cyan); }
+    .icon-amber  { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+
+    .feature-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
+    .feature-card p  { color: var(--text-sm); font-size: 0.88rem; line-height: 1.65; }
+
+    .feature-tag {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+
+    /* ─── Architecture ─── */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .arch-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+    }
+
+    .arch-panel h3 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .arch-layer {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      transition: border-color 0.2s;
+    }
+    .arch-layer:hover { border-color: var(--border-hv); }
+    .arch-layer:last-child { margin-bottom: 0; }
+
+    .arch-layer-badge {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+
+    .arch-layer-body { flex: 1; min-width: 0; }
+    .arch-layer-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
+    .arch-layer-desc { font-size: 0.78rem; color: var(--text-dim); }
+    .arch-layer-tech { font-size: 0.72rem; font-weight: 600; color: var(--text-dim); white-space: nowrap; }
+
+    /* ─── Pipeline diagram ─── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 32px 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .pipeline-step {
+      flex: 1;
+      min-width: 120px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      text-align: center;
+      position: relative;
+    }
+
+    .pipeline-arrow {
+      flex-shrink: 0;
+      width: 32px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 1rem;
+    }
+
+    .pipeline-step-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 4px; }
+    .pipeline-step-name  { font-size: 0.88rem; font-weight: 600; }
+    .pipeline-step-desc  { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+
+    .pipeline-l1  { border-top: 2px solid var(--green); }
+    .pipeline-l2  { border-top: 2px solid var(--blue); }
+    .pipeline-l3  { border-top: 2px solid var(--purple); }
+    .pipeline-out { border-top: 2px solid var(--amber); }
+
+    /* ─── Setup tabs ─── */
+    .setup-wrap { max-width: 860px; margin: 0 auto; }
+
+    .setup-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      justify-content: center;
+    }
+
+    .setup-tab-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 8px 22px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .setup-tab-btn.active { background: rgba(59, 130, 246, 0.08); border-color: var(--blue); color: var(--text); }
+    .setup-tab-btn:hover:not(.active) { border-color: var(--border-hv); color: var(--text); }
+
+    .setup-content { display: none; }
+    .setup-content.active { display: block; }
+
+    .setup-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .setup-step { border-bottom: 1px solid var(--border); padding: 20px 28px; display: flex; gap: 18px; align-items: flex-start; }
+    .setup-step:last-child { border-bottom: none; }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .step-body { flex: 1; min-width: 0; }
+    .step-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+    .step-desc  { font-size: 0.82rem; color: var(--text-sm); margin-bottom: 10px; }
+
+    .code-block {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .code-text {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      white-space: nowrap;
+      overflow-x: auto;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+    .copy-btn:hover { color: var(--text); }
+    .copy-icon { width: 14px; height: 14px; display: block; }
+
+    /* ─── API reference ─── */
+    .api-table-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: rgba(255,255,255,0.03);
+      padding: 12px 20px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody td {
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .method-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .method-get    { background: rgba(16, 185, 129, 0.12); color: var(--green); }
+    .method-post   { background: rgba(59, 130, 246, 0.12); color: var(--blue); }
+    .method-delete { background: rgba(239, 68, 68, 0.12);  color: #ef4444; }
+
+    .route-path {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.82rem;
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 24px;
+      background: rgba(17, 24, 39, 0.5);
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-brand-name { font-weight: 700; font-size: 0.95rem; }
+    .footer-brand-sub  { font-size: 0.78rem; color: var(--text-dim); margin-top: 2px; }
+
+    .footer-links { display: flex; gap: 24px; }
+    .footer-link {
+      text-decoration: none;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .footer-link:hover { color: var(--text); }
+
+    .footer-copy { color: var(--text-dim); font-size: 0.78rem; }
+
+    /* ─── Workflow & Services ─── */
+    .workflow-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 48px;
+    }
+    .wf-step {
+      background: var(--bg-card);
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .wf-step-num { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
+    .wf-step-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+    .wf-step-cmd { font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; color: var(--text-dim); margin-top: 6px; background: rgba(255,255,255,0.04); border-radius: 4px; padding: 2px 6px; display: inline-block; }
+    .wf-step-desc { font-size: 0.78rem; color: var(--text-dim); line-height: 1.5; }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .svc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .svc-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      box-shadow: 0 0 8px currentColor;
+    }
+    .svc-dot-green  { background: var(--green);  color: var(--green); }
+    .svc-dot-blue   { background: var(--blue);   color: var(--blue); }
+    .svc-dot-purple { background: var(--purple); color: var(--purple); }
+    .svc-dot-amber  { background: var(--amber);  color: var(--amber); }
+    .svc-dot-cyan   { background: var(--cyan);   color: var(--cyan); }
+    .svc-body {}
+    .svc-name { font-size: 0.88rem; font-weight: 600; }
+    .svc-url { font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; color: var(--text-dim); margin-top: 2px; }
+    .svc-desc { font-size: 0.75rem; color: var(--text-dim); margin-top: 3px; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .hero { padding: 72px 20px 48px; }
+      .arch-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2.2rem; }
+      .section { padding: 56px 16px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .pipeline { flex-direction: column; align-items: stretch; }
+      .pipeline-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Navigation ─── -->
+<header>
+  <div class="nav-wrap">
+    <a href="#" class="logo">
+      <div class="logo-mark">LM</div>
+      Loomind Studio
+    </a>
+    <nav class="nav-links">
+      <a href="#features"          class="nav-link">Features</a>
+      <a href="#fleet-engineering" class="nav-link">Fleet</a>
+      <a href="#experience-memory" class="nav-link">Memory</a>
+      <a href="#architecture"      class="nav-link">Architecture</a>
+      <a href="#quickstart"        class="nav-link">Quick Start</a>
+      <a href="#api"               class="nav-link">API</a>
+      <a href="https://github.com/KhaiTrang1995/loomind-studio" class="nav-cta">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ─── Hero ─── -->
+  <section class="hero">
+    <div class="hero-badge">✨ Phase 11 &mdash; Agentic Brain &middot; Multi-Agent Orchestration</div>
+    <h1>Institutional Memory for<br><span>AI Coding Agents</span></h1>
+    <p class="hero-desc">
+      Loomind Studio — the open-source AI Experience Engine that intercepts agent actions in real-time,
+      learns from every session, decomposes goals into User Stories with BA analysis, and orchestrates
+      multi-agent workflows with human-in-the-loop controls. Your agents execute smarter every day.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#quickstart" class="btn btn-primary">🚀 Get Started in 5 mins</a>
+      <a href="#architecture" class="btn btn-secondary">📐 View Architecture</a>
+      <a href="https://github.com/KhaiTrang1995/loomind-studio#dashboard-overview" class="btn btn-secondary" target="_blank" rel="noopener">🎨 Dashboard Preview</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--blue)">3</div>
+        <div class="stat-label">Intercept Layers<br><span style="font-size:0.7rem;color:var(--text-dim)">Filter → Search → Synthesize</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--green)">15</div>
+        <div class="stat-label">MCP Tools<br><span style="font-size:0.7rem;color:var(--text-dim)">Full engine surface exposure</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--purple)">✓</div>
+        <div class="stat-label">HITL Built-In<br><span style="font-size:0.7rem;color:var(--text-dim)">Safe critical decisions</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--cyan)">180s</div>
+        <div class="stat-label">Approval Window<br><span style="font-size:0.7rem;color:var(--text-dim)">Auto-execute timeout</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--amber)">4+</div>
+        <div class="stat-label">CLI Fleet Ready<br><span style="font-size:0.7rem;color:var(--text-dim)">Claude, AGY, Grok, Codex</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--green)">v11</div>
+        <div class="stat-label">Agentic Brain<br><span style="font-size:0.7rem;color:var(--text-dim)">Full orchestration</span></div>
+      </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal-wrap">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <div class="terminal-dot dot-r"></div>
+          <div class="terminal-dot dot-y"></div>
+          <div class="terminal-dot dot-g"></div>
+        </div>
+        <div class="terminal-tabs">
+          <button class="ttab active" onclick="switchTab(this,'start')">Engine</button>
+          <button class="ttab" onclick="switchTab(this,'intercept')">Intercept</button>
+          <button class="ttab" onclick="switchTab(this,'goal')">Goal</button>
+          <button class="ttab" onclick="switchTab(this,'brain')">BA Brain</button>
+          <button class="ttab" onclick="switchTab(this,'agent')">Agent Loop</button>
+          <button class="ttab" onclick="switchTab(this,'fleet')">Fleet</button>
+        </div>
+      </div>
+      <div class="terminal-body" id="term-body">
+        <div class="t-line"><span class="t-prompt">$</span>cd core/loomind-engine &amp;&amp; python -m uvicorn src.main:app --port 8082</div>
+        <div class="t-line t-dim">INFO: Started server process</div>
+        <div class="t-line"><span class="t-green">INFO:</span> Loading sentence-transformer: all-MiniLM-L6-v2</div>
+        <div class="t-line"><span class="t-green">INFO:</span> Qdrant connected at localhost:6333</div>
+        <div class="t-line"><span class="t-green">INFO:</span> Agent registry initialized (TTL=120s)</div>
+        <div class="t-line"><span class="t-green">INFO:</span> SSE event bus ready</div>
+        <div class="t-line"><span class="t-green">INFO:</span> GoalStore (SQLite WAL) → ./data/goals.db</div>
+        <div class="t-line"><span class="t-green">INFO:</span> BAService + NotificationService (flag OFF) initialized</div>
+        <div class="t-line"><span class="t-green">INFO:</span> Goal service (Phase 11 Agentic Brain) initialized</div>
+        <div class="t-line"><span class="t-green">INFO:</span> MCP server bound on stdio (15 tools)</div>
+        <div class="t-line"><span class="t-green">INFO:</span> Uvicorn running on http://0.0.0.0:8082</div>
+        <div class="t-line t-dim">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</div>
+        <div class="t-line"><span class="t-prompt">$</span>curl http://localhost:8082/health</div>
+        <div class="t-line t-green">{ "status": "ok", "qdrant": true, "embedder": true, "llm": true }</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Features ─── -->
+  <section id="features">
+    <div class="section">
+      <div class="section-head">
+        <h2>Production-Ready Agent Intelligence</h2>
+        <p>Every component is optimized to make your AI agents smarter with every execution — learning from experiences, making faster decisions, and executing with higher confidence.</p>
+      </div>
+
+      <div class="feature-grid">
+
+        <div class="feature-card" data-accent="blue">
+          <div class="feature-icon icon-blue">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="2" y="3"   width="16" height="3" rx="1.5" fill="currentColor" opacity=".35"/>
+              <rect x="2" y="8.5" width="16" height="3" rx="1.5" fill="currentColor" opacity=".65"/>
+              <rect x="2" y="14"  width="16" height="3" rx="1.5" fill="currentColor"/>
+            </svg>
+          </div>
+          <h3>3-Layer Intercept Pipeline</h3>
+          <p>Every agent action flows through L1 keyword filter, L2 semantic vector search via Qdrant, and L3 LLM synthesis &mdash; returning ranked experience suggestions in milliseconds.</p>
+          <span class="feature-tag">FastAPI &middot; Qdrant &middot; Ollama</span>
+        </div>
+
+        <div class="feature-card" data-accent="purple">
+          <div class="feature-icon icon-purple">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="4"  r="2.5" fill="currentColor"/>
+              <circle cx="3"  cy="16" r="2.5" fill="currentColor" opacity=".6"/>
+              <circle cx="17" cy="16" r="2.5" fill="currentColor" opacity=".6"/>
+              <line x1="10" y1="6.5" x2="4.2"  y2="13.8" stroke="currentColor" stroke-width="1.4"/>
+              <line x1="10" y1="6.5" x2="15.8" y2="13.8" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+          </div>
+          <h3>Agentic Brain Orchestration</h3>
+          <p>Submit a high-level goal and the engine decomposes it into Research, Code, Test, and Evaluate tasks, assigns them to agents by role, and closes the loop with PostTool feedback.</p>
+          <span class="feature-tag">Phase 11 &middot; GoalService &middot; TaskRecord</span>
+        </div>
+
+        <div class="feature-card" data-accent="green">
+          <div class="feature-icon icon-green">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <circle cx="10" cy="10" r="3" fill="currentColor"/>
+              <line x1="10" y1="3" x2="10" y2="17" stroke="currentColor" stroke-width="1.2" opacity=".4"/>
+              <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="1.2" opacity=".4"/>
+            </svg>
+          </div>
+          <h3>Agent Registry</h3>
+          <p>In-memory registry with 120-second TTL tracks online agents by role &mdash; orchestrator, research, coding, testing, evaluation &mdash; and routes tasks to the right agent automatically.</p>
+          <span class="feature-tag">AgentRegistry &middot; Heartbeat &middot; Role routing</span>
+        </div>
+
+        <div class="feature-card" data-accent="cyan">
+          <div class="feature-icon icon-cyan">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M4 6h12M4 10h8M4 14h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="16" cy="14" r="3" fill="currentColor" opacity=".8"/>
+            </svg>
+          </div>
+          <h3>MCP Integration</h3>
+          <p>15 built-in MCP tools expose the full engine surface &mdash; intercept, save experience, register agent, submit goal, claim task, and complete task &mdash; to any MCP-compatible client.</p>
+          <span class="feature-tag">FastMCP &middot; stdio transport &middot; 15 tools</span>
+        </div>
+
+        <div class="feature-card" data-accent="amber">
+          <div class="feature-icon icon-amber">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M3 10 Q10 3 17 10 Q10 17 3 10Z" stroke="currentColor" stroke-width="1.4" fill="none"/>
+              <circle cx="10" cy="10" r="2.5" fill="currentColor"/>
+              <line x1="14" y1="6" x2="18" y2="3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="14" y1="14" x2="18" y2="17" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>SSE Real-time Event Bus</h3>
+          <p>Agents subscribe to <code style="font-family:monospace;font-size:0.8em;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px">/api/stream/{id}</code> and receive push events &mdash; task_assigned, goal_completed, experience_evolved &mdash; without polling.</p>
+          <span class="feature-tag">sse-starlette &middot; asyncio.Queue &middot; push</span>
+        </div>
+
+        <div class="feature-card" data-accent="blue">
+          <div class="feature-icon icon-blue">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <rect x="6" y="6" width="4"  height="4" rx="1" fill="currentColor" opacity=".6"/>
+              <rect x="11" y="6" width="3" height="3" rx="1" fill="currentColor" opacity=".3"/>
+              <rect x="6" y="12" width="8" height="2" rx="1" fill="currentColor" opacity=".3"/>
+            </svg>
+          </div>
+          <h3>Native Desktop Dashboard</h3>
+          <p>React 19 + Tauri 2 app with nine pages &mdash; Dashboard, Experiences, Agents, Goals, Fleet, Monitor, Graph, Terminal, Settings &mdash; with Notification config (webhook + Telegram feature flag) built-in.</p>
+          <span class="feature-tag">React 19 &middot; Tauri 2 &middot; Vite 6</span>
+        </div>
+
+        <div class="feature-card" data-accent="purple" style="grid-column: 1 / -1">
+          <div style="display:flex;gap:20px;align-items:flex-start">
+            <div class="feature-icon icon-purple" style="flex-shrink:0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2 L18 7 L18 13 L10 18 L2 13 L2 7 Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <circle cx="10" cy="10" r="2.5" fill="currentColor"/>
+              </svg>
+            </div>
+            <div style="flex:1">
+              <h3>Agentic Brain — Phase 11</h3>
+              <p>BA Agent decomposes any natural-language goal into User Stories with Acceptance Criteria and Fibonacci story points using LLM. Tasks are queued by priority, claimed exclusively (no race condition), and executed autonomously. HITL tasks wait 180 seconds for SA approval &mdash; then auto-execute. SECURITY tasks require explicit approval always. Interrupted tasks resume from checkpoint, not from scratch.</p>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
+                <span class="feature-tag">BA Agent &middot; User Stories</span>
+                <span class="feature-tag">HITL &middot; 180s timeout</span>
+                <span class="feature-tag">SQLite WAL &middot; Resume from checkpoint</span>
+                <span class="feature-tag">Fibonacci 1,2,3,5,8,13</span>
+                <span class="feature-tag">Webhook &middot; Telegram (v2)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Fleet Engineering ─── -->
+  <div class="section-alt">
+    <section id="fleet-engineering" class="section">
+      <div class="section-head">
+        <h2>Fleet Engineering &mdash; CLIs That Work Together</h2>
+        <p>The step beyond a single coding agent: a <strong>harness</strong> that coordinates a whole <strong>fleet</strong> of heterogeneous CLI agents &mdash; Claude, AGY, Grok, Codex &mdash; through one autonomous <strong>loop engine</strong>. Each CLI polls for work, claims a task exclusively, executes it in its own context, and reports back. This is <strong>loop engineering</strong> &rarr; the foundation of fleet engineering.</p>
+      </div>
+
+      <!-- Loop engine flow -->
+      <div style="margin-bottom:36px">
+        <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:16px;text-align:center">The Loop Engine &nbsp;&#8635;</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;justify-content:center">
+          <div style="flex:1;min-width:128px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--blue);font-size:0.9rem">Goal in</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">natural language</div></div>
+          <div style="color:var(--text-dim);font-size:1.2rem;align-self:center">&rarr;</div>
+          <div style="flex:1;min-width:128px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--purple);font-size:0.9rem">BA decompose</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">User Stories + points</div></div>
+          <div style="color:var(--text-dim);font-size:1.2rem;align-self:center">&rarr;</div>
+          <div style="flex:1;min-width:128px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--amber);font-size:0.9rem">Priority queue</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">SQLite WAL, durable</div></div>
+          <div style="color:var(--text-dim);font-size:1.2rem;align-self:center">&rarr;</div>
+          <div style="flex:1;min-width:128px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--cyan);font-size:0.9rem">CLI claims</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">atomic, no races</div></div>
+          <div style="color:var(--text-dim);font-size:1.2rem;align-self:center">&rarr;</div>
+          <div style="flex:1;min-width:128px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--green);font-size:0.9rem">Execute + report</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">via CLI bridge</div></div>
+        </div>
+        <div style="text-align:center;color:var(--text-dim);font-size:0.8rem;margin-top:14px">&#8635;&nbsp; every completed task feeds <a href="#experience-memory" style="color:var(--text-sm);text-decoration:underline">Experience Memory</a> &mdash; the fleet executes smarter on the next cycle</div>
+      </div>
+
+      <!-- CLI fleet -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px"><div style="font-weight:700;color:var(--text)">Claude</div><div style="font-size:0.78rem;color:var(--text-sm);margin-top:4px">Coding &middot; native hooks</div></div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px"><div style="font-weight:700;color:var(--text)">AGY</div><div style="font-size:0.78rem;color:var(--text-sm);margin-top:4px">Evaluation &middot; wrapper</div></div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px"><div style="font-weight:700;color:var(--text)">Grok</div><div style="font-size:0.78rem;color:var(--text-sm);margin-top:4px">Research &middot; config hook</div></div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px"><div style="font-weight:700;color:var(--text)">Codex</div><div style="font-size:0.78rem;color:var(--text-sm);margin-top:4px">Code &middot; wrapper</div></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;justify-content:center">
+        <span class="feature-tag">harness</span>
+        <span class="feature-tag">loop engineering</span>
+        <span class="feature-tag">fleet engineering</span>
+        <span class="feature-tag">dynamic CLI affinity</span>
+        <span class="feature-tag">atomic claim &middot; retry blacklist</span>
+      </div>
+    </section>
+  </div>
+
+  <!-- ─── Experience Memory ─── -->
+  <section id="experience-memory" class="section">
+    <div class="section-head">
+      <h2>Experience Memory &mdash; Knowledge That Persists</h2>
+      <p>Every lesson the fleet learns is saved as a durable <strong>experience</strong> in a Qdrant vector store on disk &mdash; institutional memory that survives restarts and redeploys. This is <strong>persisted knowledge, not ephemeral RAM</strong>: shut everything down, restart tomorrow, and the fleet still remembers what worked.</p>
+    </div>
+
+    <!-- Tiered promotion -->
+    <div style="margin-bottom:36px">
+      <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:16px;text-align:center">Tiered Memory &mdash; experiences earn their rank</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;justify-content:center">
+        <div style="flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--text-sm);font-size:0.9rem">T3 &middot; Observation</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">newly saved lesson</div></div>
+        <div style="color:var(--text-dim);font-size:1.2rem;align-self:center">&rarr;</div>
+        <div style="flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--cyan);font-size:0.9rem">T2 &middot; Pattern</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">repeated success</div></div>
+        <div style="color:var(--text-dim);font-size:1.2rem;align-self:center">&rarr;</div>
+        <div style="flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--blue);font-size:0.9rem">T1 &middot; Practice</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">proven reliable</div></div>
+        <div style="color:var(--text-dim);font-size:1.2rem;align-self:center">&rarr;</div>
+        <div style="flex:1;min-width:150px;background:var(--bg-card);border:1px solid rgba(16,185,129,0.4);border-radius:var(--radius-sm);padding:14px 12px;text-align:center"><div style="font-weight:700;color:var(--green);font-size:0.9rem">T0 &middot; Principle</div><div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">always applied first</div></div>
+      </div>
+      <div style="text-align:center;color:var(--text-dim);font-size:0.8rem;margin-top:14px">A <strong>PASS</strong> evaluation promotes the experiences that helped &uarr; &nbsp;&middot;&nbsp; a <strong>NEEDS_REVISION</strong> demotes them &darr; &mdash; the feedback loop closes itself</div>
+    </div>
+
+    <!-- Learning loop -->
+    <div class="feature-grid">
+      <div class="feature-card" data-accent="purple">
+        <h3>Judge &rarr; Observe &rarr; Evolve</h3>
+        <p>A background worker judges outcomes, records observations against the experiences that were surfaced, and runs an evolution cycle that re-ranks the whole base &mdash; no manual curation.</p>
+        <span class="feature-tag">JudgeService &middot; EvolutionService</span>
+      </div>
+      <div class="feature-card" data-accent="green">
+        <h3>Auto-saved verified solutions</h3>
+        <p>When an <code>evaluate</code> task returns PASS, the working code is saved automatically as a <code>verified-solution</code> experience. The next similar goal surfaces it instantly &mdash; the fleet stops re-solving solved problems.</p>
+        <span class="feature-tag">verified-solution &middot; auto</span>
+      </div>
+      <div class="feature-card" data-accent="blue">
+        <h3>Durable, portable, shareable</h3>
+        <p>Experiences live in Qdrant (vectors on disk) and export to a single backup file &mdash; snapshot before a risky change, or share a team's hard-won knowledge across machines.</p>
+        <span class="feature-tag">Qdrant &middot; export / import</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Architecture ─── -->
+  <div class="section-alt">
+    <section id="architecture" class="section">
+      <div class="section-head">
+        <h2>Polyglot Microservices Architecture</h2>
+        <p>Python FastAPI engine for orchestration, TypeScript SDK and React dashboard, Rust-powered native desktop app. Scalable, modular, production-grade components built for extensibility.</p>
+      </div>
+
+      <!-- Pipeline diagram -->
+      <div style="margin-bottom:48px">
+        <div style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:16px;text-align:center">
+          Intercept Pipeline
+        </div>
+        <div class="pipeline">
+          <div class="pipeline-step pipeline-l1">
+            <div class="pipeline-step-label">L1</div>
+            <div class="pipeline-step-name">Filter</div>
+            <div class="pipeline-step-desc">Keyword &amp; readonly guard</div>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+          <div class="pipeline-step pipeline-l2">
+            <div class="pipeline-step-label">L2</div>
+            <div class="pipeline-step-name">Semantic Search</div>
+            <div class="pipeline-step-desc">Qdrant vector retrieval</div>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+          <div class="pipeline-step pipeline-l3">
+            <div class="pipeline-step-label">L3</div>
+            <div class="pipeline-step-name">LLM Synthesis</div>
+            <div class="pipeline-step-desc">Ollama / llama.cpp</div>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+          <div class="pipeline-step pipeline-out">
+            <div class="pipeline-step-label">Out</div>
+            <div class="pipeline-step-name">InterceptResponse</div>
+            <div class="pipeline-step-desc">Ranked suggestions</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-panel">
+          <h3>Engine (Python &middot; :8082)</h3>
+
+          <div class="arch-layer">
+            <div class="arch-layer-badge icon-blue">DM</div>
+            <div class="arch-layer-body">
+              <div class="arch-layer-name">domain/</div>
+              <div class="arch-layer-desc">ExperienceService, GoalService, EvolutionService, Ranker, JudgeService</div>
+            </div>
+            <div class="arch-layer-tech">DDD</div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-badge icon-green">IN</div>
+            <div class="arch-layer-body">
+              <div class="arch-layer-name">infrastructure/</div>
+              <div class="arch-layer-desc">QdrantStore, Embedder, AgentRegistry, EventBus, BackgroundWorker</div>
+            </div>
+            <div class="arch-layer-tech">Qdrant v1.17+</div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-badge icon-purple">PR</div>
+            <div class="arch-layer-body">
+              <div class="arch-layer-name">presentation/</div>
+              <div class="arch-layer-desc">InterceptRouter, AgentsRouter, GoalsRouter, StreamRouter, MCPServer</div>
+            </div>
+            <div class="arch-layer-tech">FastAPI</div>
+          </div>
+        </div>
+
+        <div class="arch-panel">
+          <h3>Client (TypeScript)</h3>
+
+          <div class="arch-layer">
+            <div class="arch-layer-badge icon-cyan">DT</div>
+            <div class="arch-layer-body">
+              <div class="arch-layer-name">apps/loomind-desktop</div>
+              <div class="arch-layer-desc">React 19 dashboard &mdash; 9 pages with real-time SSE and Tauri sidecar</div>
+            </div>
+            <div class="arch-layer-tech">Tauri 2</div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-badge icon-amber">SK</div>
+            <div class="arch-layer-body">
+              <div class="arch-layer-name">packages/loomind-client</div>
+              <div class="arch-layer-desc">TypeScript SDK &mdash; sync/async intercept, agent_loop helper, offline queue</div>
+            </div>
+            <div class="arch-layer-tech">tsup</div>
+          </div>
+
+          <div class="arch-layer">
+            <div class="arch-layer-badge icon-green">CL</div>
+            <div class="arch-layer-body">
+              <div class="arch-layer-name">apps/loomind-cli</div>
+              <div class="arch-layer-desc">CLI &mdash; status, list, add, search, delete, export, import</div>
+            </div>
+            <div class="arch-layer-tech">Turborepo</div>
+          </div>
+        </div>
+        <div class="arch-panel" style="grid-column: 1 / -1">
+          <h3>Fleet &amp; Host Services</h3>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+            <div class="arch-layer">
+              <div class="arch-layer-badge icon-amber">BR</div>
+              <div class="arch-layer-body">
+                <div class="arch-layer-name">apps/cli-bridge &nbsp;&middot;&nbsp; :8083</div>
+                <div class="arch-layer-desc">Python host-side proxy &mdash; spawns CLI subprocesses, streams results back to engine</div>
+              </div>
+              <div class="arch-layer-tech">Flask</div>
+            </div>
+
+            <div class="arch-layer">
+              <div class="arch-layer-badge icon-purple">LP</div>
+              <div class="arch-layer-body">
+                <div class="arch-layer-name">apps/cli-bridge/agent_loop.py</div>
+                <div class="arch-layer-desc">Polls engine every 15 s &mdash; claims tasks, dispatches to CLI, reports completion</div>
+              </div>
+              <div class="arch-layer-tech">asyncio</div>
+            </div>
+
+            <div class="arch-layer">
+              <div class="arch-layer-badge icon-green">FL</div>
+              <div class="arch-layer-body">
+                <div class="arch-layer-name">CLI Fleet</div>
+                <div class="arch-layer-desc">Claude &middot; AGY &middot; Grok &middot; Codex &mdash; each wrapped with fleet-hooks that report busy/idle status in real time</div>
+              </div>
+              <div class="arch-layer-tech">hooks</div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;padding:12px 16px;border:1px solid rgba(139,92,246,0.2);border-radius:8px;font-size:0.75rem;color:var(--text-dim);line-height:1.6">
+            <span style="color:var(--purple);font-weight:600">Daily workflow:</span>&nbsp;
+            <code style="color:var(--text-sm)">.\start.ps1</code> &rarr; engine + bridge + loop + dashboard all start &rarr;
+            submit goal in UI &rarr; tasks flow to fleet &rarr; CLIs execute autonomously &rarr;
+            <code style="color:var(--text-sm)">.\stop.ps1</code> when done (Docker keeps running)
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ─── Quick Start ─── -->
+  <section id="quickstart" class="section">
+    <div class="section-head">
+      <h2>Get Running in Minutes</h2>
+      <p>Loomind Studio is designed for fast onboarding. Clone, run one command, and you're orchestrating multi-agent workflows. Choose your platform below.</p>
+    </div>
+
+    <div class="setup-wrap">
+      <div class="setup-tabs">
+        <button class="setup-tab-btn active" onclick="switchSetup(this,'win')">Windows (PowerShell)</button>
+        <button class="setup-tab-btn" onclick="switchSetup(this,'nix')">Bash / WSL</button>
+        <button class="setup-tab-btn" onclick="switchSetup(this,'cli')">CLI Setup (once)</button>
+        <button class="setup-tab-btn" onclick="switchSetup(this,'docker')">First Deploy</button>
+      </div>
+
+      <!-- Windows -->
+      <div class="setup-content active" id="setup-win">
+        <div class="setup-panel">
+          <div class="setup-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Install dependencies</div>
+              <div class="step-desc">Run once after cloning to install Node packages and create the CLI Bridge virtual environment.</div>
+              <div class="code-block">
+                <span class="code-text">npm install</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Set up CLI fleet <span style="font-size:0.72rem;color:var(--text-dim);font-weight:400">(run once)</span></div>
+              <div class="step-desc">Auto-detects Claude, AGY, Grok, Codex paths and configures fleet hooks in PowerShell profile + Claude settings.json.</div>
+              <div class="code-block">
+                <span class="code-text">.\scripts\cli-setup.ps1</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Start everything</div>
+              <div class="step-desc">Starts CLI Bridge (:8083), Agent Loop, and Dashboard (:5173). Engine Docker is detected &mdash; skipped if already running.</div>
+              <div class="code-block">
+                <span class="code-text">.\start.ps1</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Open Dashboard</div>
+              <div class="step-desc">Browse to the management UI. Submit a goal in Goals, watch CLIs execute in Fleet.</div>
+              <div class="code-block">
+                <span class="code-text">http://localhost:5173</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <div class="step-title">Stop when done</div>
+              <div class="step-desc">Stops bridge, agent loop, and dashboard. Docker (Engine + Qdrant) keeps running.</div>
+              <div class="code-block">
+                <span class="code-text">.\stop.ps1</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bash / WSL -->
+      <div class="setup-content" id="setup-nix">
+        <div class="setup-panel">
+          <div class="setup-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Install dependencies</div>
+              <div class="step-desc">Install Node packages from the repo root.</div>
+              <div class="code-block">
+                <span class="code-text">npm install</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Start everything</div>
+              <div class="step-desc">Starts CLI Bridge (:8083), Agent Loop, and Dashboard (:5173) as background jobs. Engine Docker detected — skipped if already running.</div>
+              <div class="code-block">
+                <span class="code-text">bash start.sh</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Open Dashboard</div>
+              <div class="step-desc">Browse to the management UI &mdash; Goals, Fleet, Experiences, Agents, Monitor.</div>
+              <div class="code-block">
+                <span class="code-text">http://localhost:5173</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLI Setup -->
+      <div class="setup-content" id="setup-cli">
+        <div class="setup-panel">
+          <div class="setup-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Run one-shot CLI setup</div>
+              <div class="step-desc">Auto-detects Claude, AGY, Codex, Grok paths and writes hooks to PowerShell profile + ~/.claude/settings.json. Safe to re-run &mdash; never duplicates entries.</div>
+              <div class="code-block">
+                <span class="code-text">.\scripts\cli-setup.ps1</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Reload PowerShell profile</div>
+              <div class="step-desc">Activates the new <code>agy</code> and <code>codex</code> function wrappers in the current session.</div>
+              <div class="code-block">
+                <span class="code-text">. $PROFILE</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Verify fleet in Dashboard</div>
+              <div class="step-desc">Open Fleet page &mdash; all configured CLIs should show <strong>Online</strong> within 30 s of starting the engine.</div>
+              <div class="code-block">
+                <span class="code-text">http://localhost:5173/fleet</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div style="margin:8px 0 0;padding:12px 16px;border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:0.75rem;color:var(--text-dim);line-height:1.7">
+            <span style="color:var(--amber);font-weight:600">What the setup configures:</span><br>
+            &bull; <code>apps/cli-bridge/config.json</code> &mdash; correct paths for each CLI<br>
+            &bull; PowerShell <code>$PROFILE</code> &mdash; <code>agy</code> / <code>codex</code> wrappers with fleet reporting<br>
+            &bull; <code>~/.claude/settings.json</code> &mdash; UserPromptSubmit / Stop / PreToolCall hooks<br>
+            &bull; Grok: edit <code>~/.grok/config.toml</code> manually (see README &rarr; CLI Setup)
+          </div>
+        </div>
+      </div>
+
+      <!-- First Deploy -->
+      <div class="setup-content" id="setup-docker">
+        <div class="setup-panel">
+          <div class="setup-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Initial deploy (build + start)</div>
+              <div class="step-desc">Builds Docker image from source, starts Engine (:8082) + Qdrant (:6333). Polls /health up to 90 s, runs smoke test.</div>
+              <div class="code-block">
+                <span class="code-text">.\scripts\deploy\deploy-docker.ps1</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Hot-patch code changes</div>
+              <div class="step-desc">Copies src/ into the running container and reloads uvicorn in seconds &mdash; no rebuild needed.</div>
+              <div class="code-block">
+                <span class="code-text">.\scripts\deploy\update-engine.ps1</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Deploy with latest git changes</div>
+              <div class="step-desc">Pulls latest commits, rebuilds image, restarts container &mdash; volumes (experiences, goals) are untouched.</div>
+              <div class="code-block">
+                <span class="code-text">.\scripts\deploy\deploy-docker.ps1 -Pull</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Verify health</div>
+              <div class="step-desc">Confirm the engine is up and all subsystems are ready.</div>
+              <div class="code-block">
+                <span class="code-text">curl http://localhost:8082/health</span>
+                <button class="copy-btn" onclick="copyCode(this)" title="Copy">
+                  <svg class="copy-icon" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── API Reference ─── -->
+  <div class="section-alt">
+    <section id="api" class="section">
+      <div class="section-head">
+        <h2>API reference</h2>
+        <p>The engine runs on port 8082. All endpoints return JSON.</p>
+      </div>
+
+      <div class="api-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:90px">Method</th>
+              <th>Endpoint</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/intercept</td>
+              <td style="color:var(--text-sm)">3-layer pipeline &mdash; returns ranked suggestions</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/posttool</td>
+              <td style="color:var(--text-sm)">Report PostTool verdict &mdash; closes the learning loop</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-get">GET</span></td>
+              <td class="route-path">/api/experiences</td>
+              <td style="color:var(--text-sm)">List all stored experiences</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/experiences</td>
+              <td style="color:var(--text-sm)">Save a new experience</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/experiences/search</td>
+              <td style="color:var(--text-sm)">Semantic vector search</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/agents/register</td>
+              <td style="color:var(--text-sm)">Register an agent with role and capabilities</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-get">GET</span></td>
+              <td class="route-path">/api/agents</td>
+              <td style="color:var(--text-sm)">List online agents (TTL-filtered)</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/goals</td>
+              <td style="color:var(--text-sm)">Submit goal &mdash; engine decomposes into 4 tasks</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/goals/{id}/tasks/{tid}/claim</td>
+              <td style="color:var(--text-sm)">Agent claims a task</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/goals/{id}/tasks/{tid}/complete</td>
+              <td style="color:var(--text-sm)">Complete task &mdash; triggers SSE broadcast</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-get">GET</span></td>
+              <td class="route-path">/api/stream/{agent_id}</td>
+              <td style="color:var(--text-sm)">SSE stream &mdash; subscribe to push events</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/evolve</td>
+              <td style="color:var(--text-sm)">Trigger evolution cycle &mdash; promote/demote experiences</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-get">GET</span></td>
+              <td class="route-path">/health</td>
+              <td style="color:var(--text-sm)">Liveness probe</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-get">GET</span></td>
+              <td class="route-path">/api/stats</td>
+              <td style="color:var(--text-sm)">Engine statistics &mdash; queries, latency, experience count</td>
+            </tr>
+            <tr>
+              <td colspan="3" style="background:rgba(139,92,246,0.05);padding:8px 20px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--purple)">Phase 11 — Agentic Brain</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/ba/analyze</td>
+              <td style="color:var(--text-sm)">BA Agent decomposition &mdash; returns User Stories + AC + Fibonacci points</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/ba/goals/{id}/tasks/{tid}/approve</td>
+              <td style="color:var(--text-sm)">SA approves or rejects a HITL task</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/ba/goals/{id}/tasks/{tid}/checkpoint</td>
+              <td style="color:var(--text-sm)">Save task checkpoint for resume-on-interrupt</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-get">GET</span></td>
+              <td class="route-path">/api/ba/notifications/config</td>
+              <td style="color:var(--text-sm)">Get notification config (feature flag + webhooks)</td>
+            </tr>
+            <tr>
+              <td><span class="method-badge method-post">POST</span></td>
+              <td class="route-path">/api/ba/notifications/toggle</td>
+              <td style="color:var(--text-sm)">Toggle notification feature flag ON/OFF (via UI or MCP)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ─── Daily Workflow ─── -->
+  <section id="workflow">
+    <div class="section">
+      <div class="section-head">
+        <h2>Daily workflow</h2>
+        <p>From session start to autonomous execution &mdash; four steps, one command each.</p>
+      </div>
+
+      <div class="workflow-strip">
+        <div class="wf-step">
+          <div class="wf-step-num" style="color:var(--blue)">01</div>
+          <div class="wf-step-title">Start services</div>
+          <div class="wf-step-cmd">.\start.ps1</div>
+          <div class="wf-step-desc" style="margin-top:8px">Engine detected &rarr; skip. Bridge, Agent Loop, Dashboard start in background.</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="color:var(--purple)">02</div>
+          <div class="wf-step-title">Submit a goal</div>
+          <div class="wf-step-cmd">localhost:5173/goals</div>
+          <div class="wf-step-desc" style="margin-top:8px">BA Agent decomposes into User Stories + Fibonacci points. HITL tasks await approval.</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="color:var(--green)">03</div>
+          <div class="wf-step-title">Fleet executes</div>
+          <div class="wf-step-cmd">localhost:5173/fleet</div>
+          <div class="wf-step-desc" style="margin-top:8px">Claude, AGY, Grok, Codex claim tasks autonomously via SSE push. Results flow back to engine.</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-step-num" style="color:var(--amber)">04</div>
+          <div class="wf-step-title">Stop &amp; persist</div>
+          <div class="wf-step-cmd">.\stop.ps1</div>
+          <div class="wf-step-desc" style="margin-top:8px">Bridge + dashboard stop. Docker keeps running. Experiences and goals survive restart.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Services ─── -->
+  <div class="section-alt" id="fleet">
+    <section class="section">
+      <div class="section-head">
+        <h2>Running services</h2>
+        <p>All services started with <code style="font-family:monospace;background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:4px">.\start.ps1</code>. Docker Engine + Qdrant run persistently.</p>
+      </div>
+
+      <div class="services-grid">
+        <div class="svc-card">
+          <div class="svc-dot svc-dot-green"></div>
+          <div class="svc-body">
+            <div class="svc-name">Engine API</div>
+            <div class="svc-url">localhost:8082</div>
+            <div class="svc-desc">FastAPI — 3-layer pipeline + Agentic Brain</div>
+          </div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-dot svc-dot-blue"></div>
+          <div class="svc-body">
+            <div class="svc-name">Swagger Docs</div>
+            <div class="svc-url">localhost:8082/docs</div>
+            <div class="svc-desc">Interactive OpenAPI documentation</div>
+          </div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-dot svc-dot-purple"></div>
+          <div class="svc-body">
+            <div class="svc-name">Qdrant</div>
+            <div class="svc-url">localhost:6333</div>
+            <div class="svc-desc">Vector database for experience embeddings</div>
+          </div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-dot svc-dot-amber"></div>
+          <div class="svc-body">
+            <div class="svc-name">CLI Bridge</div>
+            <div class="svc-url">localhost:8083</div>
+            <div class="svc-desc">Host-side proxy — spawns CLI subprocesses</div>
+          </div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-dot svc-dot-cyan"></div>
+          <div class="svc-body">
+            <div class="svc-name">Dashboard</div>
+            <div class="svc-url">localhost:5173</div>
+            <div class="svc-desc">React 19 — 9 pages, real-time SSE fleet view</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<!-- ─── Footer ─── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo-mark">LM</div>
+      <div>
+        <div class="footer-brand-name">Loomind Studio</div>
+        <div class="footer-brand-sub">AI Experience Engine &middot; Phase 11</div>
+      </div>
+    </div>
+
+    <div class="footer-links">
+      <a href="#features"          class="footer-link">Features</a>
+      <a href="#fleet-engineering" class="footer-link">Fleet</a>
+      <a href="#experience-memory" class="footer-link">Memory</a>
+      <a href="#architecture"      class="footer-link">Architecture</a>
+      <a href="#quickstart"        class="footer-link">Quick Start</a>
+      <a href="#api"               class="footer-link">API</a>
+    </div>
+
+    <div class="footer-copy">MIT License &middot; 2026 Loomind Contributors</div>
+  </div>
+</footer>
+
+<script>
+  var TERMINAL_CONTENT = {
+    start: '<div class="t-line"><span class="t-prompt">$</span>.\\start.ps1</div><div class="t-line t-dim">  Checking Docker engine... already running ✓</div><div class="t-line t-dim">  Starting CLI Bridge (:8083)...</div><div class="t-line t-dim">  Starting Agent Loop (poll 15s)...</div><div class="t-line t-dim">  Starting Vite dev server...</div><div class="t-line"><span class="t-green">  All services up</span></div><div class="t-line t-dim">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</div><div class="t-line"><span class="t-prompt">$</span>cd core/loomind-engine &amp;&amp; python -m uvicorn src.main:app --port 8082</div><div class="t-line t-dim">INFO: Started server process</div><div class="t-line"><span class="t-green">INFO:</span> Loading sentence-transformer: all-MiniLM-L6-v2</div><div class="t-line"><span class="t-green">INFO:</span> Qdrant connected at localhost:6333</div><div class="t-line"><span class="t-green">INFO:</span> Agent registry initialized (TTL=120s)</div><div class="t-line"><span class="t-green">INFO:</span> SSE event bus ready</div><div class="t-line"><span class="t-green">INFO:</span> GoalStore (SQLite WAL) → ./data/goals.db</div><div class="t-line"><span class="t-green">INFO:</span> BAService (LLM decomposition) ready</div><div class="t-line"><span class="t-green">INFO:</span> NotificationService: feature flag OFF</div><div class="t-line"><span class="t-green">INFO:</span> Goal service (Phase 11 Agentic Brain) initialized</div><div class="t-line"><span class="t-green">INFO:</span> MCP server bound on stdio (15 tools)</div><div class="t-line"><span class="t-green">INFO:</span> Uvicorn running on http://0.0.0.0:8082</div><div class="t-line t-dim">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</div><div class="t-line"><span class="t-prompt">$</span>curl http://localhost:8082/health</div><div class="t-line t-green">{ "status": "ok", "qdrant": true, "embedder": true, "llm": true }</div>',
+
+    intercept: '<div class="t-line"><span class="t-prompt">$</span>curl -s -X POST http://localhost:8082/api/intercept \\</div><div class="t-line t-dim">&nbsp;&nbsp;-H "Content-Type: application/json" \\</div><div class="t-line t-dim">&nbsp;&nbsp;-d \'{"action": "open db connection", "action_type": "write", "language": "python"}\'</div><div class="t-line">{</div><div class="t-line t-dim">&nbsp;&nbsp;"trace_id": <span class="t-purple">"a1b2c3d4-..."</span>,</div><div class="t-line t-dim">&nbsp;&nbsp;"layer_used": <span class="t-blue">"L2"</span>,</div><div class="t-line t-dim">&nbsp;&nbsp;"suggestions": [</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "id": "exp-001", "title": <span class="t-amber">"Use connection pooling"</span>, "score": 0.94 },</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "id": "exp-002", "title": <span class="t-amber">"Prefer SQLAlchemy sessions"</span>, "score": 0.87 }</div><div class="t-line t-dim">&nbsp;&nbsp;],</div><div class="t-line t-dim">&nbsp;&nbsp;"latency_ms": <span class="t-green">42</span></div><div class="t-line">}</div>',
+
+    goal: '<div class="t-line"><span class="t-prompt">$</span>curl -s -X POST http://localhost:8082/api/goals \\</div><div class="t-line t-dim">&nbsp;&nbsp;-d \'{"goal": "Build JWT auth REST API", "submitted_by": "orchestrator-1"}\'</div><div class="t-line">{</div><div class="t-line t-dim">&nbsp;&nbsp;"goal_id": <span class="t-purple">"goal-f9a2..."</span>,</div><div class="t-line t-dim">&nbsp;&nbsp;"status": <span class="t-amber">"in_progress"</span>,</div><div class="t-line t-dim">&nbsp;&nbsp;"tasks": [</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "task_type": <span class="t-blue">"research"</span>, "status": "pending" },</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "task_type": <span class="t-green">"code"</span>, "status": "pending" },</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "task_type": <span class="t-amber">"test"</span>, "status": "pending" },</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "task_type": <span class="t-purple">"evaluate"</span>, "status": "pending" }</div><div class="t-line t-dim">&nbsp;&nbsp;]</div><div class="t-line">}</div>',
+
+    brain: '<div class="t-line"><span class="t-prompt">$</span>curl -s -X POST http://localhost:8082/api/ba/analyze \\</div><div class="t-line t-dim">&nbsp;&nbsp;-d \'{"goal": "Thêm tính năng xác thực JWT cho FastAPI app", "submitted_by": "claude-cli"}\'</div><div class="t-line t-green">BA Agent: phân tích goal với LLM...</div><div class="t-line">{</div><div class="t-line t-dim">&nbsp;&nbsp;"goal_id": <span class="t-purple">"goal-ba42..."</span>,</div><div class="t-line t-dim">&nbsp;&nbsp;"total_points": <span class="t-amber">14</span>,</div><div class="t-line t-dim">&nbsp;&nbsp;"user_stories": [</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "title": "Research JWT best practices", "story_points": <span class="t-green">3</span>, "task_mode": <span class="t-blue">"auto"</span> },</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "title": "Implement JWT auth middleware", "story_points": <span class="t-green">5</span>, "task_mode": <span class="t-blue">"auto"</span> },</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "title": "Xử lý secret key rotation", "story_points": <span class="t-green">3</span>, "task_mode": <span class="t-amber">"security"</span> },</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "title": "Write unit tests", "story_points": <span class="t-green">2</span>, "task_mode": <span class="t-blue">"auto"</span> },</div><div class="t-line t-dim">&nbsp;&nbsp;&nbsp;&nbsp;{ "title": "Verify &amp; review", "story_points": <span class="t-green">1</span>, "task_mode": <span class="t-blue">"auto"</span> }</div><div class="t-line t-dim">&nbsp;&nbsp;]</div><div class="t-line">}</div><div class="t-line t-dim">&mdash;&mdash; task secret key rotation: SECURITY → HITL bắt buộc, không auto-escalate &mdash;&mdash;</div>',
+
+    agent: '<div class="t-line"><span class="t-prompt">$</span>python scripts/agent_loop_template.py</div><div class="t-line t-green">Registering orchestrator-1 [orchestrator]</div><div class="t-line t-green">Registering researcher-1  [research]</div><div class="t-line t-green">Registering coder-1       [coding]</div><div class="t-line t-green">Registering tester-1      [testing]</div><div class="t-line t-blue">orchestrator-1: submitted goal "Build JWT auth REST API"</div><div class="t-line t-dim">researcher-1: SSE &lt;task_assigned&gt; research task</div><div class="t-line t-dim">researcher-1: intercepting... L2 hit (3 experiences)</div><div class="t-line t-green">researcher-1: task COMPLETED</div><div class="t-line t-dim">coder-1: SSE &lt;task_assigned&gt; code task</div><div class="t-line t-green">coder-1: task COMPLETED</div><div class="t-line t-dim">tester-1: SSE &lt;task_assigned&gt; test task</div><div class="t-line t-green">tester-1: task COMPLETED</div><div class="t-line t-purple">orchestrator-1: SSE &lt;goal_completed&gt;</div><div class="t-line t-dim">PostTool closed. Evolution cycle triggered.</div>',
+
+    fleet: '<div class="t-line"><span class="t-prompt">$</span>curl -s http://localhost:8082/api/agents/fleet | python -m json.tool</div><div class="t-line">[</div><div class="t-line t-dim">&nbsp;&nbsp;{ "cli": <span class="t-amber">"claude"</span>,  "status": <span class="t-green">"idle"</span>,   "tasks_completed": <span class="t-blue">2</span>,  "last_seen": "2 min ago" },</div><div class="t-line t-dim">&nbsp;&nbsp;{ "cli": <span class="t-amber">"agy"</span>,     "status": <span class="t-amber">"busy"</span>,   "tasks_completed": <span class="t-blue">12</span>, "last_seen": "just now" },</div><div class="t-line t-dim">&nbsp;&nbsp;{ "cli": <span class="t-amber">"grok"</span>,    "status": <span class="t-green">"idle"</span>,   "tasks_completed": <span class="t-blue">5</span>,  "last_seen": "5 min ago" },</div><div class="t-line t-dim">&nbsp;&nbsp;{ "cli": <span class="t-amber">"codex"</span>,   "status": <span class="t-blue">"online"</span>, "tasks_completed": <span class="t-blue">0</span>,  "last_seen": "1 min ago" }</div><div class="t-line">]</div><div class="t-line t-dim">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</div><div class="t-line"><span class="t-prompt">$</span>curl -s -X POST http://localhost:8082/api/goals -H "Content-Type: application/json" -d \'{"goal": "Refactor auth module to JWT", "submitted_by": "claude"}\' | python -m json.tool</div><div class="t-line t-dim">goal_id: <span class="t-purple">"goal-7f3a..."</span> &mdash; tasks decomposed:</div><div class="t-line t-dim">&nbsp;&nbsp;<span class="t-blue">research</span> → agy claimed</div><div class="t-line t-dim">&nbsp;&nbsp;<span class="t-green">code</span>     → claude claimed</div><div class="t-line t-dim">&nbsp;&nbsp;<span class="t-amber">test</span>     → grok claimed</div><div class="t-line t-dim">&nbsp;&nbsp;<span class="t-purple">evaluate</span> → agy queued</div><div class="t-line t-green">✓ Goal in_progress — Fleet is executing autonomously</div>'
+  };
+
+  function switchTab(btn, key) {
+    btn.parentNode.querySelectorAll('.ttab').forEach(function(t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('term-body').innerHTML = TERMINAL_CONTENT[key];
+  }
+
+  function switchSetup(btn, key) {
+    btn.parentNode.querySelectorAll('.setup-tab-btn').forEach(function(t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('.setup-content').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('setup-' + key).classList.add('active');
+  }
+
+  function copyCode(btn) {
+    var text = btn.closest('.code-block').querySelector('.code-text').textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      btn.style.color = 'var(--green)';
+      setTimeout(function() { btn.style.color = ''; }, 1500);
+    });
+  }
+</script>
+</body>
+</html>

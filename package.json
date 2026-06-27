@@ -1,0 +1,26 @@
+{
+  "name": "loomind-studio",
+  "packageManager": "npm@10.9.2",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/loomind-cli",
+    "apps/loomind-desktop",
+    "extensions/vscode"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{js,ts,tsx,json,css,html}\"",
+    "prepare": "python -m pre_commit install --install-hooks -t pre-commit || exit 0",
+    "hooks:install": "python -m pre_commit install --install-hooks -t pre-commit",
+    "hooks:run": "python -m pre_commit run --all-files"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.7.0"
+  }
+}

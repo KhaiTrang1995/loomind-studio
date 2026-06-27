@@ -1,0 +1,25 @@
+{
+  "name": "loomind-cli",
+  "version": "0.1.0",
+  "description": "CLI tool to manage the Loomind Experience Engine",
+  "bin": {
+    "loomind": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs",
+    "dev": "tsx src/index.ts",
+    "lint": "tsc --noEmit",
+    "test": "echo \"no tests yet\""
+  },
+  "dependencies": {
+    "@loomind/client": "*",
+    "@loomind/types": "*",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,51 @@
+[Unit]
+Description=Loomind Experience Engine
+Documentation=https://github.com/loomind-ai/loomind-studio
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=loomind
+Group=loomind
+WorkingDirectory=/opt/loomind/core/loomind-engine
+Environment=PATH=/opt/loomind/core/loomind-engine/.venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=ENGINE_HOST=127.0.0.1
+Environment=ENGINE_PORT=8082
+Environment=QDRANT_MODE=local
+Environment=QDRANT_PATH=/var/lib/loomind/qdrant
+Environment=EMBEDDING_MODEL=all-MiniLM-L6-v2
+Environment=LLM_PROVIDER=ollama
+Environment=OLLAMA_URL=http://127.0.0.1:11434
+
+# Python virtual environment
+ExecStart=/opt/loomind/core/loomind-engine/.venv/bin/python -m uvicorn src.main:app \
+    --host 127.0.0.1 \
+    --port 8082 \
+    --workers 1 \
+    --log-level info
+
+# Restart policy
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=3
+StartLimitIntervalSec=60
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=2G
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/loomind /var/log/loomind
+PrivateTmp=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=loomind
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,143 @@
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+eggs/
+.eggs/
+*.egg-info/
+*.egg
+.installed.cfg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ─── Virtual Environment ───
+.venv/
+venv/
+env/
+ENV/
+.env.local
+
+# ─── Testing & Coverage ───
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+
+# ─── Node.js / TypeScript ───
+node_modules/
+dist/
+*.tsbuildinfo
+.npm
+.yarn/cache
+
+# ─── Turborepo ───
+.turbo/
+
+# ─── Tauri / Rust ───
+target/
+src-tauri/target/
+*.exe
+!apps/loomind-desktop/src-tauri/target/release/bundle/
+tauri-dev.log
+
+# ─── PyInstaller ───
+*.spec
+
+# ─── IDE ───
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ─── Logs & Output ───
+*.log
+logs/*
+!logs/.gitkeep
+!logs/README.md
+output/*
+!output/.gitkeep
+!output/README.md
+
+# ─── CLI Bridge runtime data (sensitive local paths & session logs) ───
+apps/cli-bridge/config.json
+apps/cli-bridge/agent-tools/*
+!apps/cli-bridge/agent-tools/.gitkeep
+apps/cli-bridge/terminals/*
+!apps/cli-bridge/terminals/.gitkeep
+apps/cli-bridge/nul
+
+# ─── Windows NUL redirect artifacts ───
+nul
+**/nul
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.tmp
+
+# ─── Config (sensitive) ───
+.env
+.env.*
+!.env.example
+config/local.yaml
+config/*.local.yaml
+
+# ─── Qdrant local data ───
+core/loomind-engine/data/
+data/qdrant/
+data/qdrant_tmp/
+
+# ─── Generated / Reports ───
+reports/*.html
+
+# ─── Nested repos (separate git projects) ───
+brainstorm-skill-package/
+
+# ─── Temp scripts (screenshot/mockup generators) ───
+create-dashboard-*.html
+create-dashboard-*.mjs
+create_dashboard_*.py
+screenshot-*.mjs
+svg-to-png.mjs
+
+# ─── Legacy / removed modules (do not re-add) ───
+orchestrator/
+agentic_team/
+mcp_server/
+graphify/
+GRAPHIFY.md
+.mcp.json
+.circleci/
+.gitlab-ci.yml
+Jenkinsfile
+.turbor
+*.zst
+
+# ─── Local-only (never published) ───
+.claude/settings.local.json
+
+# ─── Stray Windows copy: bundled .venv + duplicate launchers (rác) ───
+scripts/windown/
+docs/plans/README.md
+docs/plans/phase-7-polish.md
+docs/plans/phase-6-docker-deployment.md
+docs/plans/phase-5-cli-tool.md
+docs/plans/phase-4-desktop-app.md
+docs/plans/phase-3-vscode-extension.md
+docs/plans/phase-2-shared-packages.md
+docs/plans/phase-1-core-engine.md
+docs/plans/phase-0-foundation.md

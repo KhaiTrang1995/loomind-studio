@@ -1,0 +1,28 @@
+# Loomind Engine — Runtime Dependencies
+# Install: pip install -r requirements.txt
+# Source: pyproject.toml [tool.poetry.dependencies]
+#
+# Platform notes:
+#   Linux/Windows x86_64: torch is pulled as CPU-only wheel via poetry (pyproject.toml source).
+#   macOS (Apple Silicon): torch installs from PyPI automatically — no extra config needed.
+#   Docker: poetry handles torch; requirements.txt is for local dev without poetry.
+
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+qdrant-client>=1.13.0
+sentence-transformers>=3.4.0
+httpx>=0.28.0
+structlog>=25.1.0
+python-dotenv>=1.0.0
+pyyaml>=6.0
+# SSE push for agent event streams (Phase 9D)
+sse-starlette>=2.0.0
+# MCP server support — FastMCP transport
+mcp>=1.0.0
+# gunicorn: enables multi-worker mode when file-based BackgroundWorker is replaced
+# with a Redis/DB-backed queue. Set UVICORN_WORKERS > 1 and switch CMD accordingly.
+gunicorn>=22.0.0
+# Build tools (needed for build_exe.py)
+pyinstaller>=6.0

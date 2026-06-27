@@ -1,0 +1,82 @@
+[
+  {
+    "action": "create database connection pool",
+    "action_type": "write",
+    "file_path": "src/database.py",
+    "language": "python",
+    "expected_experience_titles": ["Use Connection Pooling"],
+    "expected_skip": false
+  },
+  {
+    "action": "cat requirements.txt",
+    "action_type": "read",
+    "file_path": "requirements.txt",
+    "language": "text",
+    "expected_experience_titles": [],
+    "expected_skip": true
+  },
+  {
+    "action": "ls core/",
+    "action_type": "unknown",
+    "file_path": "core",
+    "language": "bash",
+    "expected_experience_titles": [],
+    "expected_skip": true
+  },
+  {
+    "action": "git status",
+    "action_type": "unknown",
+    "file_path": "",
+    "language": "",
+    "expected_experience_titles": [],
+    "expected_skip": true
+  },
+  {
+    "action": "store plain password in config file",
+    "action_type": "write",
+    "file_path": "config.yaml",
+    "language": "yaml",
+    "expected_experience_titles": ["Do Not Store Plaintext Passwords"],
+    "expected_skip": false
+  },
+  {
+    "action": "run pytest tests/",
+    "action_type": "execute",
+    "file_path": "",
+    "language": "",
+    "expected_experience_titles": [],
+    "expected_skip": false
+  },
+  {
+    "action": "optimize SQL query in loop",
+    "action_type": "write",
+    "file_path": "queries.py",
+    "language": "python",
+    "expected_experience_titles": ["Avoid SQL Queries inside Loops"],
+    "expected_skip": false
+  },
+  {
+    "action": "write JWT authentication helper",
+    "action_type": "write",
+    "file_path": "auth.py",
+    "language": "python",
+    "expected_experience_titles": ["Use Bcrypt for Password Hashing", "Set Short JWT Expiration"],
+    "expected_skip": false
+  },
+  {
+    "action": "git log --oneline",
+    "action_type": "read",
+    "file_path": "",
+    "language": "",
+    "expected_experience_titles": [],
+    "expected_skip": true
+  },
+  {
+    "action": "create new database migration file",
+    "action_type": "write",
+    "file_path": "migrations/001_init.sql",
+    "language": "sql",
+    "expected_experience_titles": [],
+    "expected_skip": false
+  }
+]

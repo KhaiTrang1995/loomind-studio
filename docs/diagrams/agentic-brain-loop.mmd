@@ -1,0 +1,102 @@
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'darkMode': true,
+    'background': '#0f1629',
+    'primaryColor': '#1e2a4a',
+    'primaryTextColor': '#e2e8f0',
+    'primaryBorderColor': '#667eea',
+    'lineColor': '#667eea',
+    'fontFamily': 'Inter, sans-serif',
+    'fontSize': '14px'
+  }
+}}%%
+
+flowchart TB
+  %% ── Goal Input ──
+  GOAL["🎯 Goal Submitted<br/><i>Human or API</i>"]
+
+  %% ── Brain Decomposition ──
+  BA["🧠 BA Agent<br/><i>LLM decomposes into<br/>User Stories + Story Points</i>"]
+
+  %% ── Task Queue ──
+  QUEUE["📋 Priority Task Queue<br/><i>SQLite WAL — survives restarts</i>"]
+
+  %% ── Fleet Execution ──
+  subgraph FLEET["🚀 Autonomous CLI Fleet"]
+    direction LR
+    CLAUDE["Claude<br/>:coding"]
+    GROK["Grok<br/>:research"]
+    CODEX["Codex<br/>:testing"]
+    AGY["AGY<br/>:evaluation"]
+  end
+
+  %% ── Pipeline ──
+  subgraph PIPELINE["🔄 Sequential Pipeline"]
+    direction LR
+    R["🔍 Research"] --> C["💻 Code"] --> T["🧪 Test"] --> E["⚖️ Evaluate"]
+  end
+
+  %% ── Intercept (Experience lookup) ──
+  INTERCEPT["🛡️ Experience Intercept<br/><i>L1 Filter → L2 Semantic → L3 LLM</i>"]
+
+  %% ── HITL Gate ──
+  HITL{"🔒 HITL<br/>Gate"}
+
+  %% ── Evaluation Outcomes ──
+  PASS["✅ PASS"]
+  REVISION["🔄 NEEDS_REVISION<br/><i>max 3 cycles</i>"]
+
+  %% ── Learning Actions ──
+  UPVOTE["⬆️ Upvote<br/><i>Experiences promoted<br/>T3→T2→T1→T0</i>"]
+  DOWNVOTE["⬇️ Downvote<br/><i>Experiences demoted</i>"]
+  SAVE["💾 Auto-Save<br/><i>Verified solution<br/>→ Experience Engine</i>"]
+  AFFINITY["📊 Update Affinity<br/><i>CLI success rate<br/>Laplace smoothed</i>"]
+
+  %% ── Knowledge Store ──
+  KB["📚 Experience Engine<br/><i>Qdrant Vector Store</i><br/><i>T0 Principles → T3 Observations</i>"]
+
+  %% ── Flow ──
+  GOAL --> BA
+  BA --> QUEUE
+  QUEUE -->|"SSE push"| FLEET
+  FLEET <-->|"claim via Bridge :8083"| PIPELINE
+  INTERCEPT -->|"suggestions injected<br/>into task prompt"| PIPELINE
+  PIPELINE --> HITL
+  HITL -->|"safe"| E
+  HITL -->|"🔐 SECURITY/DELETE"| HUMAN["🧑 Human Approval"]
+  HUMAN --> E
+
+  E --> PASS
+  E --> REVISION
+
+  PASS --> UPVOTE
+  PASS --> SAVE
+  PASS --> AFFINITY
+  REVISION --> DOWNVOTE
+  REVISION --> AFFINITY
+  REVISION -.->|"revision hints<br/>in working memory"| C
+
+  UPVOTE --> KB
+  DOWNVOTE --> KB
+  SAVE --> KB
+  KB -.->|"smarter next time"| INTERCEPT
+
+  AFFINITY -.->|"better CLI routing"| FLEET
+
+  %% ── Styles ──
+  style GOAL fill:#1e2a4a,stroke:#667eea,stroke-width:2px,color:#e2e8f0
+  style BA fill:#2a1a3a,stroke:#b794f4,stroke-width:2px,color:#e2e8f0
+  style QUEUE fill:#1e2a4a,stroke:#667eea,stroke-width:2px,color:#e2e8f0
+  style FLEET fill:#0f1629,stroke:#f6ad55,stroke-width:2px,color:#e2e8f0
+  style PIPELINE fill:#0f1629,stroke:#48bb78,stroke-width:2px,color:#e2e8f0
+  style INTERCEPT fill:#1a2744,stroke:#a3bffa,stroke-width:2px,color:#e2e8f0
+  style HITL fill:#2e2a1a,stroke:#f6ad55,stroke-width:2px,color:#e2e8f0
+  style PASS fill:#1a3a2a,stroke:#48bb78,stroke-width:2px,color:#48bb78
+  style REVISION fill:#2e2a1a,stroke:#f6ad55,stroke-width:2px,color:#f6ad55
+  style UPVOTE fill:#1a2e4a,stroke:#48bb78,stroke-width:2px,color:#e2e8f0
+  style DOWNVOTE fill:#2e1a1a,stroke:#fc8181,stroke-width:2px,color:#e2e8f0
+  style SAVE fill:#1a2744,stroke:#b794f4,stroke-width:2px,color:#e2e8f0
+  style AFFINITY fill:#1a2744,stroke:#667eea,stroke-width:2px,color:#e2e8f0
+  style KB fill:#2a1a3a,stroke:#f093fb,stroke-width:2px,color:#e2e8f0
+  style HUMAN fill:#1e2a4a,stroke:#b794f4,stroke-width:2px,color:#e2e8f0

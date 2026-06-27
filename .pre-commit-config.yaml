@@ -1,0 +1,81 @@
+# Loomind Studio — pre-commit hooks
+# ---------------------------------------------------------------------------
+# One-time setup (any contributor or AI agent committing to this repo):
+#
+#     pip install pre-commit
+#     pre-commit install --install-hooks -t pre-commit -t commit-msg
+#
+# `npm install` runs the same install automatically (see package.json → prepare).
+#
+# These hooks enforce two non-negotiables before code leaves a machine:
+#   1. No secrets / no `.env` files ever get committed.
+#   2. Every AI-agent commit carries a `Claude-Session:` trailer for traceability.
+# ---------------------------------------------------------------------------
+minimum_pre_commit_version: "3.5.0"
+default_install_hook_types: [pre-commit]
+default_stages: [pre-commit]
+
+repos:
+  # ─── Universal hygiene ────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: detect-private-key   # blocks RSA/EC/OpenSSH private key material
+        # security-review skill scripts contain the BEGIN ... PRIVATE KEY
+        # strings as detection patterns, not real keys.
+        exclude: '^\.agents/skills/security-review/'
+      # NOTE: line-ending normalization is owned by .gitattributes
+      # (*.ps1/*.bat = CRLF, source = LF), so no mixed-line-ending hook here.
+
+  # ─── Project-specific guards (local, no external deps) ────────────────
+  - repo: local
+    hooks:
+      # Dependency-free secret scanner — works with just Python (no Go/Docker).
+      # gitleaks runs as a CI safety net where the Go toolchain is available.
+      - id: scan-secrets
+        name: 🔑 scan staged files for secrets
+        language: system
+        entry: python scripts/hooks/scan-secrets.py
+        pass_filenames: true
+        require_serial: true
+
+      # 1. Refuse to commit any real .env file. Templates are allowed.
+      - id: forbid-dotenv
+        name: 🔒 forbid committing .env files
+        language: fail
+        entry: >-
+          A .env file is staged. Never commit secrets — copy it to
+          .env.example with empty values instead, then `git rm --cached <file>`.
+        files: '(^|/)\.env(\.[^/]*)?$'
+        exclude: '(^|/)\.env\.(example|sample|template|dist)$'
+
+  # ─── Python quality (opt-in) ──────────────────────────────────────────
+  # Enable after a one-time cleanup pass:
+  #     pre-commit run --all-files
+  # so the first contributor to touch a file isn't blocked by legacy style.
+  # ruff consolidates black + isort + flake8 + pyupgrade; bandit covers security.
+  #
+  # - repo: https://github.com/astral-sh/ruff-pre-commit
+  #   rev: v0.8.4
+  #   hooks:
+  #     - id: ruff
+  #       args: ["--fix", "--line-length=100"]
+  #       files: '^(core/loomind-engine|apps/cli-bridge)/.*\.py$'
+  #     - id: ruff-format
+  #       args: ["--line-length=100"]
+  #       files: '^(core/loomind-engine|apps/cli-bridge)/.*\.py$'
+  # - repo: https://github.com/PyCQA/bandit
+  #   rev: 1.8.0
+  #   hooks:
+  #     - id: bandit
+  #       args: ["-ll", "-r"]
+  #       files: '^(core/loomind-engine|apps/cli-bridge)/src/.*\.py$'

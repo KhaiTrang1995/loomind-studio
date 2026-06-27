@@ -1,0 +1,19 @@
+# gitleaks configuration for Loomind Studio
+# Extends the built-in ruleset; only adds allowlist entries for files that are
+# templates/fixtures by design and must never trip the scanner.
+title = "Loomind Studio gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Templates, lockfiles, and documentation examples (no real secrets)"
+paths = [
+  '''(^|/)\.env\.(example|sample|template)$''',
+  '''(^|/)package-lock\.json$''',
+  '''(^|/)\.claude/skills/security/.*\.md$''',  # secure-coding docs use placeholder secrets
+]
+regexes = [
+  '''sk-secret-key-here''',
+  '''sk-hardcoded-secret''',
+]

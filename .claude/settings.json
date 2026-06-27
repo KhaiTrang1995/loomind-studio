@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest *)",
+      "Bash(python3 -m pytest *)",
+      "Bash(pip install *)",
+      "Bash(pip3 install *)",
+      "Bash(python -m uvicorn *)",
+      "Bash(python3 -m uvicorn *)",
+      "Bash(npx turbo *)",
+      "Bash(npm *)",
+      "Bash(node *)",
+      "Bash(docker compose *)",
+      "Bash(python -c *)",
+      "Bash(python3 -c *)",
+      "Bash(prettier *)",
+      "Bash(wc *)"
+    ],
+    "deny": ["Bash(rm -rf /)", "Bash(rm -rf ~)", "Bash(git push --force *)"]
+  }
+}

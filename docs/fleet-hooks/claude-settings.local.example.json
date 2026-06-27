@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s --max-time 3 http://localhost:8082/health)",
+      "Bash(curl -s -X POST http://localhost:8082/api/experiences -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(python -m json.tool --no-ensure-ascii)",
+      "Bash(curl -s http://localhost:8082/api/experiences/backup/export)",
+      "Bash(curl -sf -X PATCH http://localhost:8082/api/agents/claude/status *)",
+      "Bash(curl -sf -X POST http://localhost:8082/api/agents/heartbeat?agent_id=claude)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -sf -X PATCH \"http://localhost:8082/api/agents/claude/status\" -H \"Content-Type: application/json\" -d \"{\\\"status\\\":\\\"busy\\\",\\\"task\\\":\\\"processing prompt\\\"}\" >nul 2>&1 || exit 0"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -sf -X PATCH \"http://localhost:8082/api/agents/claude/status\" -H \"Content-Type: application/json\" -d \"{\\\"status\\\":\\\"idle\\\"}\" >nul 2>&1 || exit 0"
+          }
+        ]
+      }
+    ],
+    "PreToolCall": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -sf -X POST \"http://localhost:8082/api/agents/heartbeat?agent_id=claude\" >nul 2>&1 || exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

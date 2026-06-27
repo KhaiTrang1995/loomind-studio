@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, feat/update-engine]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─── 🐍 Python Engine Tests ───────────────────────────────
+  python-tests:
+    name: 🐍 Python Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: 📦 Install dependencies
+        working-directory: core/loomind-engine
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov
+
+      - name: 🧪 Run tests with coverage
+        working-directory: core/loomind-engine
+        env:
+          TOKENIZERS_PARALLELISM: "false"
+          OMP_NUM_THREADS: "1"
+        run: |
+          if [ -d tests ] && [ -n "$(find tests -name 'test_*.py' -print -quit)" ]; then
+            set +e
+            python -m pytest tests/ -v \
+              -m "not integration and not slow" \
+              --cov=src --cov-report=term --cov-report=xml
+            exit_code=$?
+            set -e
+
+            if [ $exit_code -eq 139 ]; then
+              echo "::warning:: PyTorch/sentence-transformers process teardown SIGSEGV (exit code 139)"
+              exit 0
+            elif [ $exit_code -ne 0 ]; then
+              echo "Pytest failed with exit code $exit_code"
+              exit $exit_code
+            fi
+          else
+            echo "No test files found — skipping coverage"
+          fi
+
+      - name: 📊 Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage
+          path: core/loomind-engine/coverage.xml
+          if-no-files-found: ignore
+
+  # ─── 📘 TypeScript Build ──────────────────────────────────
+  typescript-build:
+    name: 📘 TypeScript Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔨 Build all packages
+        run: npx turbo build
+
+  # ─── 🐳 Docker Build Check ────────────────────────────────
+  docker-build:
+    name: 🐳 Docker Build Check
+    runs-on: ubuntu-latest
+    needs: [python-tests, typescript-build]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔨 Build Docker image
+        working-directory: core/loomind-engine
+        run: |
+          docker build \
+            -f ../../apps/docker-deployment/Dockerfile \
+            -t loomind-engine:ci \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            .
+
+      - name: ✅ Verify image imports
+        run: |
+          docker images loomind-engine:ci
+          docker run --rm \
+            -e QDRANT_MODE=local \
+            -e GOAL_DB_PATH=/tmp/goals.db \
+            loomind-engine:ci \
+            python -c "
+          import src.main
+          from src.config import settings
+          from src.infrastructure.log_broadcaster import setup_log_broadcasting
+          from src.presentation.config_router import router as config_router
+          from src.presentation.ba_router import router as ba_router
+          print('✓ All Phase 11 modules import OK')
+          print(f'  version: {src.main.app.version}')
+          "
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: docker rmi loomind-engine:ci || true

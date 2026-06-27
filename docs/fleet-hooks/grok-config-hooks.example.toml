@@ -1,0 +1,11 @@
+# Append this to: C:\Users\<you>\.grok\config.toml
+# Reports Grok status to Loomind Fleet Monitor (/fleet).
+
+[[hooks.UserPromptSubmit]]
+command = 'curl -sf -X PATCH "http://localhost:8082/api/agents/grok/status" -H "Content-Type: application/json" -d "{\"status\":\"busy\",\"task\":\"processing prompt\"}" >nul 2>&1 || exit 0'
+
+[[hooks.Stop]]
+command = 'curl -sf -X PATCH "http://localhost:8082/api/agents/grok/status" -H "Content-Type: application/json" -d "{\"status\":\"idle\"}" >nul 2>&1 || exit 0'
+
+[[hooks.PreToolCall]]
+command = 'curl -sf -X POST "http://localhost:8082/api/agents/heartbeat?agent_id=grok" >nul 2>&1 || exit 0'

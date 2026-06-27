@@ -1,0 +1,188 @@
+# Experience Engine Integration Rules
+
+This file documents how AI coding agents should integrate with the local Experience Engine before making code changes.
+
+The Experience Engine is a local memory and advisory layer for software engineering lessons learned. It helps agents retrieve relevant project experience before writing code, especially for architecture, security, database, infrastructure, and performance changes.
+
+## Engine Endpoint
+
+Default local URL:
+
+```text
+http://localhost:8082
+```
+
+API documentation, when the service is running:
+
+```text
+http://localhost:8082/docs
+```
+
+The engine is recommended for local agent workflows. For open-source contributors who do not run the engine, it must fail open: continue the task and do not block contribution.
+
+## Required Agent Behavior
+
+Before writing or modifying code, call:
+
+```text
+POST /api/intercept
+```
+
+Call the engine for actions such as:
+
+- Creating a new module, service, worker, connector, controller, or schema.
+- Changing authentication, authorization, RBAC, audit, secrets, or tokens.
+- Modifying database access, migrations, queries, queues, or storage clients.
+- Adding LLM calls, prompt handling, model routing, caching, or MCP tools.
+- Changing Docker, CI/CD, deployment, or infrastructure configuration.
+- Refactoring architecture boundaries or shared contracts.
+- Optimizing performance-sensitive logic.
+
+Do not call the engine for:
+
+- Read-only inspection: listing files, reading files, searching text, viewing git history.
+- Formatting-only edits that do not affect behavior.
+- Documentation wording changes that do not change policy, architecture, or workflow.
+- Repeated calls for the same action in the same session after guidance was already retrieved.
+
+## Intercept Request
+
+```json
+{
+  "action": "create qdrant vector client wrapper",
+  "action_type": "write",
+  "file_path": "packages/vector-client/client.py",
+  "file_content": "optional relevant snippet",
+  "language": "python",
+  "agent": "codex",
+  "context": "Enterprise Knowledge Hub vector storage layer"
+}
+```
+
+Fields:
+
+- `action`: short description of the action the agent is about to perform.
+- `action_type`: `read`, `write`, `execute`, or `unknown`.
+- `file_path`: target file or likely target file.
+- `file_content`: optional snippet when useful for context.
+- `language`: programming language or document type.
+- `agent`: calling agent name.
+- `context`: user intent, task scope, or architecture layer.
+
+## Intercept Response Handling
+
+Expected response shape:
+
+```json
+{
+  "skipped": false,
+  "suggestions": [
+    {
+      "experience_id": "example-id",
+      "title": "Use parameterized queries",
+      "message": "Do not build SQL with string concatenation. Use parameterized queries or an ORM-safe equivalent.",
+      "severity": "critical",
+      "relevance_score": 0.84,
+      "source": "semantic_search"
+    }
+  ],
+  "latency_ms": 42.5,
+  "layers_executed": ["L1", "L2", "L3"]
+}
+```
+
+Severity rules:
+
+- `critical`: apply unless it conflicts with explicit user instructions or repository policy. If skipped, explain why.
+- `warning`: apply when relevant. If skipped, keep the reason clear.
+- `info`: use as context only.
+
+Repository source-of-truth files take precedence when guidance conflicts:
+
+- `AGENTS.md`
+- `README.md`
+- `docs/architecture.md`
+- `.codex/rules/default.rules`
+- `.claude/rules/*.md`
+
+## Saving New Experience
+
+When the user explicitly shares a reusable lesson, the agent may save it:
+
+```text
+POST /api/experiences
+```
+
+Example:
+
+```json
+{
+  "title": "Always set TTL for Redis cache keys",
+  "description": "Cache keys must have a TTL unless they are intentionally permanent. Missing TTL can cause unbounded memory growth.",
+  "category": "bug",
+  "tags": ["redis", "cache", "ttl", "memory"],
+  "file_patterns": ["*.py", "*.ts", "*cache*"],
+  "language": "python",
+  "severity": "critical"
+}
+```
+
+Only save experience when it is generally useful and does not include secrets, private data, internal hostnames, customer content, or credentials.
+
+## Feedback
+
+When the user confirms whether guidance was useful, the agent may send:
+
+```text
+POST /api/experiences/{id}/feedback
+```
+
+Example:
+
+```json
+{
+  "score": 1.0,
+  "comment": "Applied successfully to avoid a connection leak."
+}
+```
+
+Score meaning:
+
+- `1.0`: directly useful.
+- `0.5`: partially useful.
+- `0.0`: unrelated.
+- `-0.5`: confusing.
+- `-1.0`: incorrect and should be fixed.
+
+## Health and Failure Handling
+
+Health check:
+
+```text
+GET /health
+```
+
+Failure handling:
+
+- `ECONNREFUSED`: engine is not running; continue without blocking.
+- Timeout: continue without blocking.
+- HTTP 4xx/5xx: do not retry repeatedly; continue with repository rules.
+- Empty suggestions: proceed normally.
+- `skipped: true`: proceed normally.
+
+Recommended timeout:
+
+```text
+3000-5000 ms
+```
+
+## Privacy and Open-Source Safety
+
+Never send or store:
+
+- API keys, tokens, passwords, certificates, private keys, or OAuth credentials.
+- Customer documents, internal URLs, production hostnames, or private identifiers.
+- Raw logs, session transcripts, local agent memory, or audit exports.
+- Model weights, vector snapshots, or database dumps.
+
+Use sanitized snippets and synthetic examples when sharing context with the engine.
